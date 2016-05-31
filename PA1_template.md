@@ -199,17 +199,7 @@ weekends.
 
     df3_weekday_steps <- aggregate(steps ~ interval, df3_weekday, mean)
 
-    plot(x = df3_weekday_steps$interval, y = df3_weekday_steps$steps,  type = 'l', xlab = "Interval", ylab = "Average Steps",
-         main = "Average steps per 5-min interval for weekdays")
-
-![](PA1_template_files/figure-markdown_strict/unnamed-chunk-11-1.png)
-
     df3_weekend_steps <- aggregate(steps ~ interval, df3_weekend, mean)
-
-    plot(x = df3_weekend_steps$interval, y = df3_weekend_steps$steps,  type = 'l', xlab = "Interval", ylab = "Average Steps",
-         main = "Average steps per 5-min interval for weekdays")
-
-![](PA1_template_files/figure-markdown_strict/unnamed-chunk-11-2.png)
 
     final_df <- rbind(df3_weekday, df3_weekend) 
 
@@ -217,4 +207,4 @@ weekends.
            type='l',layout=c(1,2),
            xlab='Interval',ylab='Number of Steps')
 
-![](PA1_template_files/figure-markdown_strict/unnamed-chunk-11-3.png)
+![](PA1_template_files/figure-markdown_strict/unnamed-chunk-11-1.png)
