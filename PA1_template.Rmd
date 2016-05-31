@@ -1,228 +1,179 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "PA1_template"
+output: md_document
 ---
+
+
+
 #Loading and preprocessing the data
 
-```{r, echo = TRUE}
-activityData <- read.csv("C:\\Users\\e571237\\Desktop\\activity.csv")
-```
+```{r}
 
-#What is mean total number of steps taken per day?
-
-##Calculate the total number of steps taken per day
-
-```{r, echo = TRUE}
-#splitting the data by date 
-
-indDate <- split( x= activityData, f= activityData$date)
-
-#creating a data frame that has the day no. and the no. of steps taken per day
-
-df <- data.frame(Day = numeric(),
-                 Total_Steps_taken_per_day= numeric(), 
-                 stringsAsFactors=FALSE) 
-
-
-for (i in 1:length(indDate))
-{
-  df <- rbind(df,sum(indDate[[i]]$steps))
-}
-
-df <- cbind(1:61, df)
-names(df) <- c('Day','Total Steps taken per day')
-```
-
-##Make a histogram of the total no. of steps taken per day
-
-```{r, echo = TRUE}
-
-hist(df$`Total Steps taken per day`, main = "Total number of steps taken each day", xlab = "Steps", ylab = "Frequency")
+df <- read.csv("activity.csv")
 
 ```
 
-##Calculate and report the mean and median of the total number of steps taken per day
+#What is the mean total number of steps taken per day?
 
-```{r, echo = TRUE}
-#created a data frame that has the day no, mean no of steps for that day and median no. of steps 
-#for that day
+##1. Calculate the total number of steps taken per day
 
-meanSteps <- numeric(0)
+```{r}
 
-for(i in 1:length(indDate))
-{
-  meanSteps <- append( meanSteps , mean(indDate[[i]]$steps, na.rm = TRUE))
-}
+tsteps <- aggregate(steps ~ date, df, sum, na.rm = TRUE)
 
-medianSteps <- numeric(0)
+tsteps
 
-for(i in 1:length(indDate))
-{
-  medianSteps <- append(medianSteps, median(indDate[[i]]$steps, na.rm = TRUE))
-}
-
-df <- cbind(df, meanSteps, medianSteps)
 ```
+
+##2. Make a histogram of the total number of steps taken each day
+
+```{r}
+
+hist(tsteps$steps, xlab = "Steps", main = "Total no. of steps taken each day")
+
+```
+
+##3. Calculate and report the mean and median of the total number of steps per day
+
+```{r}
+
+Mean_steps <- mean(tsteps$steps) 
+Mean_steps
+
+Median_steps <- median(tsteps$steps) 
+Median_steps
+
+```
+
 
 #What is the average daily activity pattern?
 
-##Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+##1. Make a time series plot(i.e, type = "l) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r, echo = TRUE}
-indInt <- split( x= activityData, f= activityData$interval)
+```{r}
 
-meanStepsByInt <- numeric(0)
+dsteps <- aggregate(steps ~ interval, df, mean)
 
-for(i in 1:length(indInt))
-{
-  meanStepsByInt <- append( meanStepsByInt , mean(indInt[[i]]$steps, na.rm = TRUE))
-}
-
-intervalList <- unique(activityData$interval)
-
-#time series plot of the average daily pattern of steps for 5-minute intervals
-plot(x= intervalList, y = meanStepsByInt, type = "l", main = "Average daily pattern of steps", xlab = "Interval", ylab = "Average no. of steps")
-```
-
-##Which 5-minute interval on average across all the days in the dataset, contains the maximum number of steps?
-```{r, echo = TRUE}
-
-index <- match(max(meanStepsByInt), meanStepsByInt)
-
-intervalList[index]
+plot(x = dsteps$interval, y = dsteps$steps,  type = 'l', xlab = "Interval", ylab = "Average Steps",
+     main = "Time-Series plot of average steps per 5-min interval")
 
 ```
 
-#Imputing missing values
+##2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum no. of steps?
 
-##1. Calculate and report the total number of missing values in the dataset(the total no. of rows with NAs)
+```{r}
 
-```{r, echo = TRUE}
+x <- dsteps[dsteps$steps == max(dsteps$steps),]
 
-sum(is.na(activityData$steps))
+int <- x$interval 
 
-###calculation part:
-unique(is.na(activityData$interval)) 
-
-unique(is.na(activityData$date)) 
-
-#the above two statements returned false which means that there are no missing values for date or interval. Therefore, the missing values are present only in the steps column
-
-
-###reporting part:
-
-NaDF<-activityData[is.na(activityData$steps), ]     # this subset contains all the NA data 
-unique(NaDF$date) #lists down all the dates that have all NA values
+int
 ```
 
-##Devise a strategy for filling in all of the missing values in the dataset.
+#Imputing Missing values
 
-IMPUTATION STRATEGY: Filling NAs with 0s
-There are no NA values for "interval" or "date". So we need to fill in NA in "steps".
+##1. Calculate and report the total number of missing values in the dataset (i.e., the total number of rows with NAs)
 
-##Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r, echo = TRUE}
+```{r}
 
-##filling NA values with 0s and creating a new dataset that is equal to the original dataset but with missing data filled in
+sum(is.na(df$date))
 
-activityData2 <- activityData
-activityData2[is.na(activityData2)] <- 0
+sum(is.na(df$interval)) 
+
+sum(is.na(df$steps))
 
 ```
 
-##Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day
+##2. Devise a strategy for filling in all of missing values in the dataset.
 
-```{r, echo = TRUE}
-df2 <- data.frame(Day = numeric(),
-                 Total_Steps_taken_per_day= numeric(), 
-                 stringsAsFactors=FALSE) 
+###Replace NAs with 0.
 
-indDate2 <- split( x= activityData2, f= activityData2$date)
+##3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-for (i in 1:length(indDate2))
-{
-  df2 <- rbind(df2,sum(indDate2[[i]]$steps))
-}
+The strategy is to substitute NAs with 0s.
 
-df2 <- cbind(1:length(indDate2), df2)
-names(df2) <- c('Day','Total Steps taken per day')
+```{r}
+
+df1 <- df
+
+df1$steps <- replace(df1$steps, is.na(df1$steps), 0)
 
 ```
 
-## Make a histogram of the total no. of steps taken per day
+##4. Make a histogram of the total number of steps taken per day. Do these values differ from the estimates in the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
-```{r, echo = TRUE}
+```{r}
 
-hist(df2$`Total Steps taken per day`, main = "Total no of steps", xlab = "Steps", ylab = "Frequency")
+tsteps1 <- aggregate(steps ~ date, df1, sum)
 
-###Filling NAs with 0s has had no effect on the total daily no. of steps
+hist(tsteps1$steps, xlab = "Steps", main = "Total no. of steps taken each day")
+
+Mean_steps1 <- mean(tsteps1$steps) #9354.23
+
+Median_steps1 <- median(tsteps1$steps) #10395
+
 ```
+
+Imputing missing data reduces the mean and median values.
+
 
 #Are there differences in activity patterns between weekdays and weekends?
 
-##Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or a weekend day.
-```{r, echo = TRUE}
-library(timeDate)
 
-LogicWeekday <- isWeekday(as.Date(activityData2$date), wday = 1:5)
+##1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
-Day <- character(0)
+Yes, there are differences between the actvity patterns of weekdays and weekends.
 
-for ( i in 1:length(LogicWeekday))
+```{r}
+
+d_col <- as.Date(df1$date, format = "%m/%d/%Y")
+
+w_col <- weekdays(d_col)
+
+day <- character(length(w_col))
+
+for (i in 1:length(w_col))
 {
-  if (LogicWeekday[i] == TRUE)
-    Day <- append(Day, "Weekday")
+  if (w_col[i] == "Saturday" || w_col[i] == "Sunday")
+  {day[i] <- "weekend"}
+  
   else
-    Day <- append(Day, "Weekend")
+  {day[i] <- "weekday"}
+  
 }
 
-activityData3 <- cbind(activityData2, Day)
-        #created a dataframe that has a column showing if a day is a weekday or a weekend
+df2 <- cbind(df1, day)
+
 ```
 
+##2. Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average no. of steps taken, averaged across all weekdays or weekend days (y-axis)
 
-##Make a panel plot containing a time series plot (type = "l") of the 5-minute interval (x-axis) and the average no.of steps taken, averaged across all weekday days or weekend days (y-axis)
+```{r}
 
-```{r, echo = TRUE}
+library(lattice)
 
-weekdayData <- subset(activityData3, Day == "Weekday")
-weekendData <- subset(activityData3, Day == "Weekend")
+df3 <- split(df2, f = as.factor(df2$day) )
 
-indInt_wd <- split( x= weekdayData, f= weekdayData$interval)
+df3_weekday <- data.frame(df3$weekday, stringsAsFactors = TRUE)
 
-meanStepsByInt_wd <- numeric(0)
+df3_weekend <- data.frame(df3$weekend, stringsAsFactors = TRUE)
 
-for(i in 1:length(indInt_wd))
-{
-  meanStepsByInt_wd <- append( meanStepsByInt_wd , mean(indInt_wd[[i]]$steps, na.rm = TRUE))
-}
+df3_weekday_steps <- aggregate(steps ~ interval, df3_weekday, mean)
 
-intervalList_wd <- unique(weekdayData$interval)
+plot(x = df3_weekday_steps$interval, y = df3_weekday_steps$steps,  type = 'l', xlab = "Interval", ylab = "Average Steps",
+     main = "Average steps per 5-min interval for weekdays")
 
+df3_weekend_steps <- aggregate(steps ~ interval, df3_weekend, mean)
 
-indInt_wnd <- split( x= weekendData, f= weekendData$interval)
+plot(x = df3_weekend_steps$interval, y = df3_weekend_steps$steps,  type = 'l', xlab = "Interval", ylab = "Average Steps",
+     main = "Average steps per 5-min interval for weekdays")
 
-meanStepsByInt_wnd <- numeric(0)
+final_df <- rbind(df3_weekday, df3_weekend) 
 
-for(i in 1:length(indInt_wnd))
-{
-  meanStepsByInt_wnd <- append( meanStepsByInt_wnd , mean(indInt_wnd[[i]]$steps, na.rm = TRUE))
-}
+xyplot(steps~interval|factor(day), final_df,
+       type='l',layout=c(1,2),
+       xlab='Interval',ylab='Number of Steps')
 
-intervalList_wnd <- unique(weekendData$interval)
-
-#Time series plot of the 5-minute interval and the average no. of steps taken, averaged across all weekday days 
-#or weekend days
-
-library("graphics")
-
-par(mfrow=c(2,1))
-
-plot(x= intervalList_wd, y = meanStepsByInt_wd, type = "l", main = "Weekday", xlab = "Interval", ylab = "Average no. of steps")
-plot(x= intervalList_wnd, y = meanStepsByInt_wnd, type = "l", main = "Weekend", xlab = "Interval", ylab = "Average no. of steps")
 ```
-
 
